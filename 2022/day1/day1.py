@@ -38,6 +38,12 @@ def main():
         default="sample_input.txt",
         help="File name containing the elves' supplies (located in same folder as day1.py)",
     )
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=1,
+        help="Number of top X elves to calculate the calories for.",
+    )
     args = parser.parse_args()
 
     calory_supplies_per_elf = parse_input_file(args.input_filename)
@@ -45,7 +51,9 @@ def main():
         elf_supply.calory_sum() for elf_supply in calory_supplies_per_elf
     ]
 
-    print(f"Maximum supply carried: {max(calory_sum_per_elf)}")
+    sorted_calory_sums = sorted(calory_sum_per_elf, reverse=True)
+    top_x_calories = sorted_calory_sums[: args.top]
+    print(f"Sum of top {args.top} elves' supplies = {sum(top_x_calories)}")
 
 
 if __name__ == "__main__":
