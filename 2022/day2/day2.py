@@ -70,7 +70,7 @@ class RPSRound:
         return self.chosen_actions
 
 
-def parse_input_file(input_filename: str) -> List[RPSRound]:
+def parse_format1_input_file(input_filename: str) -> List[RPSRound]:
     opponent_action_converter = {
         "A": RPSAction.ROCK,
         "B": RPSAction.PAPER,
@@ -100,6 +100,38 @@ def parse_input_file(input_filename: str) -> List[RPSRound]:
         return rps_rounds
 
 
+def parse_format2_input_file(input_filename: str) -> List[RPSRound]:
+    opponent_action_converter = {
+        "A": RPSAction.ROCK,
+        "B": RPSAction.PAPER,
+        "C": RPSAction.SCISSORS,
+    }
+    desired_result_converter = {
+        "X": RPSResult.LOSS,
+        "Y": RPSResult.DRAW,
+        "Z": RPSResult.WIN,
+    }
+
+    def convert_and_choose_action(strategy_text: str) -> Tuple[str]:
+        strategy_text = strategy_text.split()
+        opponent_action = opponent_action_converter[strategy_text[0]]
+        desired_result = desired_result_converter[strategy_text[1]]
+        for own_action in [RPSAction.ROCK, RPSAction.PAPER, RPSAction.SCISSORS]:
+            if desired_result == RPSRound.determine_result(opponent_action, own_action):
+                return (opponent_action, own_action)
+        raise RuntimeError("Could not find a suitable action")
+
+    input_filepath = Path(__file__).parent / input_filename
+    with input_filepath.open("r") as f:
+        input_text = f.read()
+        input_text_per_round = input_text.split("\n")
+        rps_rounds = [
+            RPSRound(convert_and_choose_action(strategy_text))
+            for strategy_text in input_text_per_round
+        ]
+        return rps_rounds
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Calculate the total score for the rock paper scissors game"
@@ -121,7 +153,9 @@ def main():
     args = parser.parse_args()
 
     if args.strategy_format == 1:
-        rps_rounds = parse_input_file(args.input_filename)
+        rps_rounds = parse_format1_input_file(args.input_filename)
+    elif args.strategy_format == 2:
+        rps_rounds = parse_format2_input_file(args.input_filename)
     score_per_round = [round.score for round in rps_rounds]
     total_score = sum(score_per_round)
     print(score_per_round)
