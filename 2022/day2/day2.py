@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 
 class RPSAction:
@@ -34,18 +34,7 @@ class RPSResult:
 
 
 class RPSRound:
-    opponent_action_converter = {
-        "A": RPSAction.ROCK,
-        "B": RPSAction.PAPER,
-        "C": RPSAction.SCISSORS,
-    }
-    own_action_converter = {
-        "X": RPSAction.ROCK,
-        "Y": RPSAction.PAPER,
-        "Z": RPSAction.SCISSORS,
-    }
-
-    def __init__(self, chosen_actions: str):
+    def __init__(self, chosen_actions: Tuple[str]):
         self.chosen_actions = chosen_actions
 
     @staticmethod
@@ -70,9 +59,7 @@ class RPSRound:
 
     @property
     def score(self):
-        chosen_action_texts = self.chosen_actions.split()
-        opponent_action = self.opponent_action_converter[chosen_action_texts[0]]
-        own_action = self.own_action_converter[chosen_action_texts[1]]
+        opponent_action, own_action = self.chosen_actions
         result = self.determine_result(opponent_action, own_action)
         score = RPSAction.evaluate_action(own_action) + RPSResult.evaluate_result(
             result
@@ -84,12 +71,31 @@ class RPSRound:
 
 
 def parse_input_file(input_filename: str) -> List[RPSRound]:
+    opponent_action_converter = {
+        "A": RPSAction.ROCK,
+        "B": RPSAction.PAPER,
+        "C": RPSAction.SCISSORS,
+    }
+    own_action_converter = {
+        "X": RPSAction.ROCK,
+        "Y": RPSAction.PAPER,
+        "Z": RPSAction.SCISSORS,
+    }
+
+    def convert_action_text(action_text: str) -> Tuple[str]:
+        action_text = action_text.split()
+        return (
+            opponent_action_converter[action_text[0]],
+            own_action_converter[action_text[1]],
+        )
+
     input_filepath = Path(__file__).parent / input_filename
     with input_filepath.open("r") as f:
         input_text = f.read()
         input_text_per_round = input_text.split("\n")
         rps_rounds = [
-            RPSRound(chosen_action_text) for chosen_action_text in input_text_per_round
+            RPSRound(convert_action_text(chosen_action_text))
+            for chosen_action_text in input_text_per_round
         ]
         return rps_rounds
 
@@ -105,9 +111,17 @@ def main():
         default="sample_input.txt",
         help="File name containing the strategy guide (located in same folder as day2.py)",
     )
+    parser.add_argument(
+        "-f",
+        "--strategy_format",
+        type=int,
+        default=1,
+        help="Information given in the second column of the strategy guide",
+    )
     args = parser.parse_args()
 
-    rps_rounds = parse_input_file(args.input_filename)
+    if args.strategy_format == 1:
+        rps_rounds = parse_input_file(args.input_filename)
     score_per_round = [round.score for round in rps_rounds]
     total_score = sum(score_per_round)
     print(score_per_round)
